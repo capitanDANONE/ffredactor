@@ -1,60 +1,88 @@
 <template>
-<main>
-  <aside>
+  <main>
+    <aside>
       <ul>
-          <li>d</li>
-          <li>t</li>
-          <li>w</li>
-          <li>a</li>
+        <li>d</li>
+        <li>t</li>
+        <li>w</li>
+        <li>a</li>
       </ul>
-  </aside>
-  <div class="video_container"
+    </aside>
+    <div
+      class="video_container"
       @dragover.prevent="onDragOver"
-      @drop="onDrop">
+      @drop="onDrop"
+    >
       <div class="video_container__video"></div>
-  </div>
-  <aside>
-    <div>
-      <label for="add_videos"> Add clip </label>
-      <input v-if="!videoSrc" type="file" accept="video/*" @change="onFileChange" id="add_videos"/>
     </div>
-    <ul>
-      <li class="clip" v-for="(src, index) in videoSrcs" :key="index"
-      draggable="true"
-      @dragstart="onDragStart">
-        {{ VideoNames[index] }}
-      </li>
-    </ul>
-  </aside>
-</main>
+    <aside>
+      <div>
+        <label for="add_videos">Add clip</label>
+        <input
+          v-if="!videoSrc"
+          type="file"
+          accept="video/*"
+          @change="onFileChange"
+          id="add_videos"
+        />
+      </div>
+      <ul>
+        <li
+          class="clip"
+          v-for="(src, index) in videoSrcs"
+          :key="index"
+          draggable="true"
+          @dragstart="onDragStart"
+        >
+          {{ VideoNames[index] }}
+        </li>
+      </ul>
+    </aside>
+  </main>
 </template>
+
 <script>
-import { ref, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount, onMounted } from 'vue';
+import { FFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 export default {
   setup() {
-    const videoSrcs = ref([])
-    const VideoNames = ref([])
+    const ffmpeg = new FFmpeg( );
+    const load = async () => {
+      await ffmpeg.load();
+    }
+    const videoSrcs = ref([]);
+    const VideoNames = ref([]);
+
     const onFileChange = (event) => {
       const files = event.target.files;
-      for (let i = 0;  i < files.length; i++){
-        const file = files[i]
-        VideoNames.value.push(file.name)
-        videoSrcs.value.push(URL.createObjectURL(file))
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        VideoNames.value.push(file.name);
+        videoSrcs.value.push(URL.createObjectURL(file));
       }
     };
+
     const onDragStart = () => {
-      console.log("start")
-    }
-    const onDragOver = (event) => {
-      event.preventDefault(); // Prevent default to allow drop
+      console.log("start");
     };
-    const onDrop = () =>{
-      console.log("drop")
-    }
+
+    const onDragOver = (event) => {
+      event.preventDefault();
+    };
+
+    const onDrop = () => {
+      console.log("drop");
+    };
+
+    onMounted(() => {
+      console.log("loading");
+      load();
+      console.log("loaded");
+    });
+
     onBeforeUnmount(() => {
-      // Revoke the object URL when the component is destroyed
-      videoSrcs.value.forEach(src => URL.revokeObjectURL(src));
+      videoSrcs.value.forEach((src) => URL.revokeObjectURL(src));
     });
 
     return {
@@ -63,11 +91,12 @@ export default {
       onFileChange,
       onDragStart,
       onDragOver,
-      onDrop,
+      onDrop
     };
-  },
-};
+  }
+}
 </script>
+
 <style lang="sass" scoped>
 $grey: rgb(200, 200, 200)
 main
