@@ -19,7 +19,6 @@
       <div>
         <label for="add_videos">Add clip</label>
         <input
-          v-if="!videoSrc"
           type="file"
           accept="video/*"
           @change="onFileChange"
@@ -43,23 +42,27 @@
 
 <script>
 import { ref, onBeforeUnmount, onMounted } from 'vue';
-import { FFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 export default {
   setup() {
-    const ffmpeg = new FFmpeg( );
+    const ffmpeg = new FFmpeg();
     const load = async () => {
-      await ffmpeg.load();
-    }
+      await ffmpeg.load( );
+    };
+
     const videoSrcs = ref([]);
     const VideoNames = ref([]);
 
-    const onFileChange = (event) => {
+    const onFileChange = async (event) => {
       const files = event.target.files;
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         VideoNames.value.push(file.name);
         videoSrcs.value.push(URL.createObjectURL(file));
+        const fileData = fetchFile(URL.createObjectURL(file)); 
+        console.log(fileData)
       }
     };
 
@@ -83,6 +86,7 @@ export default {
 
     onBeforeUnmount(() => {
       videoSrcs.value.forEach((src) => URL.revokeObjectURL(src));
+      // No need to revoke lastVideo as it's an internal FFmpeg object
     });
 
     return {
@@ -96,6 +100,7 @@ export default {
   }
 }
 </script>
+
 
 <style lang="sass" scoped>
 $grey: rgb(200, 200, 200)
